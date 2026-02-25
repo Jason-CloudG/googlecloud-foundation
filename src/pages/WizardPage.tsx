@@ -44,10 +44,8 @@ interface WizardData {
   centralLogging: boolean;
   logRetention: string;
   siemIntegration: string;
-  // Step 9: Project Factory
-  namingConvention: string;
-  defaultLabels: string;
-  autoEnableApis: boolean;
+  // Step 9: Google Cloud Support
+  supportPlan: string;
   // Step 10: Automation
   cicdTool: string;
   terraformStateLocation: string;
@@ -70,7 +68,7 @@ const defaultData: WizardData = {
   iamModel: "", identityProvider: "",
   cisLevel: "", vpcServiceControls: false, cmek: false, complianceNotes: "",
   centralLogging: true, logRetention: "30", siemIntegration: "",
-  namingConvention: "", defaultLabels: "", autoEnableApis: true,
+  supportPlan: "",
   cicdTool: "", terraformStateLocation: "", timeline: "",
   companyName: "", contactPerson: "", email: "", phone: "", country: "", goLiveDate: "",
 };
@@ -84,7 +82,7 @@ const stepTitles = [
   "IAM Model",
   "Security & Compliance",
   "Logging & Monitoring",
-  "Project Factory Standards",
+  "Google Cloud Support",
   "Automation & Contact",
 ];
 
@@ -311,11 +309,32 @@ const WizardPage = () => {
       );
       case 8: return (
         <div className="space-y-6">
-          <div className={fieldClass}><Label>Project Naming Convention</Label><Input placeholder="e.g., {company}-{env}-{service}-{number}" value={data.namingConvention} onChange={e => update("namingConvention", e.target.value)} /></div>
-          <div className={fieldClass}><Label>Default Labels (key:value, comma-separated)</Label><Input placeholder="team:platform, cost-center:engineering" value={data.defaultLabels} onChange={e => update("defaultLabels", e.target.value)} /></div>
-          <div className="flex items-center space-x-2 p-3 rounded-lg border bg-card">
-            <Checkbox checked={data.autoEnableApis} onCheckedChange={v => update("autoEnableApis", !!v)} />
-            <Label>Auto-Enable Common APIs on Project Creation</Label>
+          <Label className="text-base">Select a Google Cloud Support Plan *</Label>
+          <div className="space-y-4">
+            {[
+              { value: "standard", title: "Standard Support", price: "$29/month base", desc: "Technical support during business hours with 4-hour response time for P2 issues. Ideal for workloads under development." },
+              { value: "enhanced", title: "Enhanced Support", price: "Starting at $500/month + 3% of net charges", desc: "1-hour response for P1 issues, 24/7 coverage for critical issues, third-party tech support, and Cloud AI companion. Best for production workloads." },
+              { value: "premium", title: "Premium Support", price: "Starting at $12,500/month + 4% of net charges", desc: "15-minute response for P1 issues, named Technical Account Manager, Customer Aware Support, and proactive guidance. For mission-critical workloads." },
+            ].map(plan => (
+              <div
+                key={plan.value}
+                className={`p-4 rounded-lg border-2 cursor-pointer transition-all ${data.supportPlan === plan.value ? "border-primary bg-primary/5" : "border-border hover:border-primary/40 bg-card"}`}
+                onClick={() => update("supportPlan", plan.value)}
+              >
+                <div className="flex items-start gap-3">
+                  <div className={`mt-1 h-4 w-4 rounded-full border-2 flex items-center justify-center shrink-0 ${data.supportPlan === plan.value ? "border-primary" : "border-muted-foreground/40"}`}>
+                    {data.supportPlan === plan.value && <div className="h-2 w-2 rounded-full bg-primary" />}
+                  </div>
+                  <div className="flex-1">
+                    <div className="flex items-center justify-between flex-wrap gap-2">
+                      <h4 className="font-bold text-foreground">{plan.title}</h4>
+                      <span className="text-sm font-semibold text-primary">{plan.price}</span>
+                    </div>
+                    <p className="text-sm text-muted-foreground mt-1">{plan.desc}</p>
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       );
@@ -415,7 +434,13 @@ const WizardPage = () => {
               <ArrowLeft className="mr-2 h-4 w-4" /> Previous
             </Button>
             {step < stepTitles.length - 1 ? (
-              <Button onClick={() => setStep(s => s + 1)}>
+              <Button onClick={() => {
+                if (step === 8 && !data.supportPlan) {
+                  toast.error("Please select a support plan before continuing.");
+                  return;
+                }
+                setStep(s => s + 1);
+              }}>
                 Next <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
             ) : (
