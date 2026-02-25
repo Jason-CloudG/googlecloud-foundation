@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Zap, Code2, ShieldCheck, Users, Layers } from "lucide-react";
+import { Zap, Code2, ShieldCheck, Users, Layers, Award } from "lucide-react";
 
 const reasons = [
   { icon: Zap, title: "Deploy in Hours", desc: "Not weeks. Our automated pipeline provisions your entire landing zone in hours." },
@@ -7,6 +7,7 @@ const reasons = [
   { icon: ShieldCheck, title: "CIS-Aligned Security", desc: "Built on CIS Google Cloud Foundation Benchmark for enterprise compliance." },
   { icon: Users, title: "Enterprise IAM", desc: "Centralized or federated identity with proper role hierarchy and least privilege." },
   { icon: Layers, title: "Multi-Env Design", desc: "Scalable dev/test/staging/prod architecture that grows with your organization." },
+  { icon: Award, title: "Certified Professionals", desc: "Google Cloud Certified professionals with 10+ projects delivered to configure and manage Terraform at scale." },
 ];
 
 const WhyChooseUs = () => {
@@ -27,7 +28,7 @@ const WhyChooseUs = () => {
           </p>
         </motion.div>
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-5 gap-6">
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
           {reasons.map((r, i) => (
             <motion.div
               key={r.title}
