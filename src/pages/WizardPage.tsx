@@ -11,6 +11,22 @@ import { Link, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 
+import stepOrgImg from "@/assets/wizard/step-org.jpg";
+import stepBillingImg from "@/assets/wizard/step-billing.jpg";
+import stepEnvImg from "@/assets/wizard/step-env.jpg";
+import stepFoldersImg from "@/assets/wizard/step-folders.jpg";
+import stepNetworkImg from "@/assets/wizard/step-network.jpg";
+import stepIamImg from "@/assets/wizard/step-iam.jpg";
+import stepSecurityImg from "@/assets/wizard/step-security.jpg";
+import stepLoggingImg from "@/assets/wizard/step-logging.jpg";
+import stepSupportImg from "@/assets/wizard/step-support.jpg";
+import stepAutomationImg from "@/assets/wizard/step-automation.jpg";
+
+const stepImages = [
+  stepOrgImg, stepBillingImg, stepEnvImg, stepFoldersImg, stepNetworkImg,
+  stepIamImg, stepSecurityImg, stepLoggingImg, stepSupportImg, stepAutomationImg,
+];
+
 const STORAGE_KEY = "lz-wizard-data";
 
 interface WizardData {
@@ -414,7 +430,20 @@ const WizardPage = () => {
           </div>
         </div>
 
-        <Card className="p-6 md:p-8">
+        <Card className="overflow-hidden">
+          <div className="relative h-40 md:h-48 overflow-hidden">
+            <img
+              src={stepImages[step]}
+              alt={stepTitles[step]}
+              className="w-full h-full object-cover"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-card via-card/60 to-transparent" />
+            <div className="absolute bottom-4 left-6 right-6">
+              <h2 className="text-2xl font-black text-foreground">{stepTitles[step]}</h2>
+              <p className="text-muted-foreground text-sm">Step {step + 1} of {stepTitles.length}</p>
+            </div>
+          </div>
+          <div className="p-6 md:p-8">
           <AnimatePresence mode="wait">
             <motion.div
               key={step}
@@ -423,8 +452,6 @@ const WizardPage = () => {
               exit={{ opacity: 0, x: -20 }}
               transition={{ duration: 0.2 }}
             >
-              <h2 className="text-2xl font-black mb-2 text-foreground">{stepTitles[step]}</h2>
-              <p className="text-muted-foreground text-sm mb-6">Step {step + 1} of {stepTitles.length}</p>
               {renderStep()}
             </motion.div>
           </AnimatePresence>
@@ -448,6 +475,7 @@ const WizardPage = () => {
                 Submit Assessment <Check className="ml-2 h-4 w-4" />
               </Button>
             )}
+          </div>
           </div>
         </Card>
       </div>
