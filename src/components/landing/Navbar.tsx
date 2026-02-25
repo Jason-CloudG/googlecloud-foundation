@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Menu, X } from "lucide-react";
+import quadraLogo from "@/assets/quadra-logo.png";
 
 const Navbar = () => {
   const [open, setOpen] = useState(false);
@@ -10,7 +11,7 @@ const Navbar = () => {
     <nav className="fixed top-0 left-0 right-0 z-50 bg-card/80 backdrop-blur-lg border-b">
       <div className="container mx-auto flex items-center justify-between h-16 px-4">
         <Link to="/" className="flex items-center gap-2 font-bold text-xl">
-          <img src="https://www.gstatic.com/devrel-devsite/prod/v0e0f589edd85502a40d78d7d0825db8ea5ef3b99ab4070381ee86977c9168730/cloud/images/cloud-logo.svg" alt="Google Cloud" className="h-7" />
+          <img src={quadraLogo} alt="Quadra" className="h-8" />
         </Link>
 
         <div className="hidden md:flex items-center gap-8">
