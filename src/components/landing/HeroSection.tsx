@@ -42,7 +42,7 @@ const HeroSection = () => {
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Button>
             </Link>
-            <a href="mailto:contact@cloudfoundry.dev">
+            <a href="mailto:venkateshprabhu.gs@quadrasystems.net">
               <Button variant="heroOutline" size="xl">
                 <MessageSquare className="mr-2 h-5 w-5" />
                 Talk to an Expert
