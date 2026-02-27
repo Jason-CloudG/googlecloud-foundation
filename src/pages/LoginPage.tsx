@@ -15,12 +15,12 @@ const LoginPage = () => {
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
     // Basic auth placeholder — will be replaced with Supabase auth
-    if (email === "admin" && password === "12345") {
+    if (email === "admin@cloudfoundry.dev" && password === "Quadra@2025!") {
       localStorage.setItem("lz-admin-auth", "true");
       navigate("/admin");
       toast.success("Welcome back!");
     } else {
-      toast.error("Invalid credentials. Use admin / 12345");
+      toast.error("Invalid credentials.");
     }
   };
 
@@ -50,7 +50,7 @@ const LoginPage = () => {
         </form>
 
         <p className="text-xs text-muted-foreground text-center mt-6">
-          Demo credentials: admin@cloudfoundry.dev / admin123
+          Contact your administrator for access.
         </p>
       </Card>
     </div>
