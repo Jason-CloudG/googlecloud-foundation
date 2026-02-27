@@ -1,36 +1,59 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
-import { Cloud, Download, LogOut, Search } from "lucide-react";
+import { Cloud, Download, LogOut, Search, FileCode, Loader2 } from "lucide-react";
 import { Link, Navigate, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 const statusColors: Record<string, string> = {
   "New": "bg-primary/10 text-primary border-primary/20",
   "In Progress": "bg-accent/10 text-accent border-accent/20",
   "Completed": "bg-green-100 text-green-700 border-green-200",
+  "TF Generated": "bg-blue-100 text-blue-700 border-blue-200",
 };
 
 const AdminPage = () => {
   const navigate = useNavigate();
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
-  const [submissions, setSubmissions] = useState<any[]>(() => {
-    return JSON.parse(localStorage.getItem("lz-submissions") || "[]");
-  });
+  const [submissions, setSubmissions] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [generatingId, setGeneratingId] = useState<string | null>(null);
 
   const isLoggedIn = localStorage.getItem("lz-admin-auth") === "true";
+
+  const fetchSubmissions = async () => {
+    const { data, error } = await supabase
+      .from("submissions")
+      .select("*")
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      console.error("Error fetching submissions:", error);
+      toast.error("Failed to load submissions");
+    } else {
+      setSubmissions(data || []);
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    if (isLoggedIn) {
+      fetchSubmissions();
+    }
+  }, [isLoggedIn]);
 
   const filtered = useMemo(() => {
     return submissions.filter(s => {
       const matchesSearch = !search ||
-        s.companyName?.toLowerCase().includes(search.toLowerCase()) ||
+        s.company_name?.toLowerCase().includes(search.toLowerCase()) ||
         s.email?.toLowerCase().includes(search.toLowerCase()) ||
-        s.contactPerson?.toLowerCase().includes(search.toLowerCase());
+        s.contact_person?.toLowerCase().includes(search.toLowerCase());
       const matchesStatus = statusFilter === "all" || s.status === statusFilter;
       return matchesSearch && matchesStatus;
     });
@@ -40,11 +63,42 @@ const AdminPage = () => {
     return <Navigate to="/login" replace />;
   }
 
-  const updateStatus = (id: string, status: string) => {
-    const updated = submissions.map(s => s.id === id ? { ...s, status } : s);
-    setSubmissions(updated);
-    localStorage.setItem("lz-submissions", JSON.stringify(updated));
+  const updateStatus = async (id: string, status: string) => {
+    const { error } = await supabase
+      .from("submissions")
+      .update({ status })
+      .eq("id", id);
+
+    if (error) {
+      toast.error("Failed to update status");
+      return;
+    }
+    setSubmissions(prev => prev.map(s => s.id === id ? { ...s, status } : s));
     toast.success(`Status updated to ${status}`);
+  };
+
+  const generateTerraform = async (id: string) => {
+    setGeneratingId(id);
+    try {
+      const { data, error } = await supabase.functions.invoke("generate-tfvars", {
+        body: { submissionId: id },
+      });
+
+      if (error) throw error;
+
+      if (data?.success) {
+        toast.success(data.message || "Terraform file generated successfully!");
+        // Update local state
+        setSubmissions(prev => prev.map(s => s.id === id ? { ...s, status: "TF Generated" } : s));
+      } else {
+        throw new Error(data?.error || "Unknown error");
+      }
+    } catch (err: any) {
+      console.error("Terraform generation error:", err);
+      toast.error(err.message || "Failed to generate Terraform file");
+    } finally {
+      setGeneratingId(null);
+    }
   };
 
   const exportData = (format: "csv" | "json") => {
@@ -126,6 +180,7 @@ const AdminPage = () => {
                 <SelectItem value="New">New</SelectItem>
                 <SelectItem value="In Progress">In Progress</SelectItem>
                 <SelectItem value="Completed">Completed</SelectItem>
+                <SelectItem value="TF Generated">TF Generated</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -147,7 +202,14 @@ const AdminPage = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filtered.length === 0 ? (
+                {loading ? (
+                  <TableRow>
+                    <TableCell colSpan={8} className="text-center py-12 text-muted-foreground">
+                      <Loader2 className="h-6 w-6 animate-spin mx-auto mb-2" />
+                      Loading submissions...
+                    </TableCell>
+                  </TableRow>
+                ) : filtered.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={8} className="text-center py-12 text-muted-foreground">
                       {submissions.length === 0 ? "No submissions yet." : "No results match your filters."}
@@ -156,8 +218,8 @@ const AdminPage = () => {
                 ) : (
                   filtered.map(s => (
                     <TableRow key={s.id}>
-                      <TableCell className="font-medium text-foreground">{s.companyName || "—"}</TableCell>
-                      <TableCell>{s.contactPerson || "—"}</TableCell>
+                      <TableCell className="font-medium text-foreground">{s.company_name || "—"}</TableCell>
+                      <TableCell>{s.contact_person || "—"}</TableCell>
                       <TableCell className="text-sm">{s.email || "—"}</TableCell>
                       <TableCell className="text-sm">{(s.environments || []).join(", ") || "—"}</TableCell>
                       <TableCell className="text-sm">{s.timeline || "—"}</TableCell>
@@ -167,17 +229,34 @@ const AdminPage = () => {
                         </Badge>
                       </TableCell>
                       <TableCell className="text-sm text-muted-foreground">
-                        {s.createdAt ? new Date(s.createdAt).toLocaleDateString() : "—"}
+                        {s.created_at ? new Date(s.created_at).toLocaleDateString() : "—"}
                       </TableCell>
                       <TableCell>
-                        <Select value={s.status} onValueChange={v => updateStatus(s.id, v)}>
-                          <SelectTrigger className="h-8 w-32 text-xs"><SelectValue /></SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="New">New</SelectItem>
-                            <SelectItem value="In Progress">In Progress</SelectItem>
-                            <SelectItem value="Completed">Completed</SelectItem>
-                          </SelectContent>
-                        </Select>
+                        <div className="flex items-center gap-2">
+                          <Select value={s.status} onValueChange={v => updateStatus(s.id, v)}>
+                            <SelectTrigger className="h-8 w-32 text-xs"><SelectValue /></SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="New">New</SelectItem>
+                              <SelectItem value="In Progress">In Progress</SelectItem>
+                              <SelectItem value="Completed">Completed</SelectItem>
+                              <SelectItem value="TF Generated">TF Generated</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => generateTerraform(s.id)}
+                            disabled={generatingId === s.id}
+                            className="whitespace-nowrap"
+                          >
+                            {generatingId === s.id ? (
+                              <Loader2 className="mr-1 h-3 w-3 animate-spin" />
+                            ) : (
+                              <FileCode className="mr-1 h-3 w-3" />
+                            )}
+                            {generatingId === s.id ? "Generating..." : "Generate TF"}
+                          </Button>
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))

@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -128,20 +129,38 @@ const WizardPage = () => {
     }));
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!data.companyName || !data.email || !data.contactPerson) {
       toast.error("Please fill in all required contact fields.");
       return;
     }
-    // Store submission locally (will be connected to DB later)
-    const submissions = JSON.parse(localStorage.getItem("lz-submissions") || "[]");
-    submissions.push({
-      ...data,
-      id: crypto.randomUUID(),
+
+    const regionsArray = data.regions
+      ? data.regions.split(",").map(r => r.trim()).filter(Boolean)
+      : [];
+
+    const { error } = await supabase.from("submissions").insert({
+      company_name: data.companyName,
+      contact_person: data.contactPerson,
+      email: data.email,
+      org_id: data.orgId,
+      billing_account: data.billingId,
+      environments: data.environments,
+      network_model: data.networkModel,
+      iam_model: data.iamModel,
+      cis_level: data.cisLevel,
+      regions: regionsArray,
+      budget_threshold: data.budgetThreshold ? Number(data.budgetThreshold) : null,
+      timeline: data.timeline,
       status: "New",
-      createdAt: new Date().toISOString(),
     });
-    localStorage.setItem("lz-submissions", JSON.stringify(submissions));
+
+    if (error) {
+      console.error("Submission error:", error);
+      toast.error("Failed to submit. Please try again.");
+      return;
+    }
+
     localStorage.removeItem(STORAGE_KEY);
     setSubmitted(true);
     toast.success("Submission received! We'll be in touch.");
