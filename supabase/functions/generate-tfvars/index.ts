@@ -60,6 +60,13 @@ Deno.serve(async (req) => {
       });
     }
 
+    // Identity Gate validation
+    if (!submission.workspace_exists || !submission.org_id) {
+      return new Response(JSON.stringify({ error: 'Organization must exist before Terraform generation.' }), {
+        status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
     // Validate
     if (submission.org_id && !/^\d+$/.test(submission.org_id)) {
       return new Response(JSON.stringify({ error: 'orgId must be numeric' }), {

@@ -7,7 +7,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
 import { Card } from "@/components/ui/card";
-import { ArrowLeft, ArrowRight, Check, Cloud } from "lucide-react";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { ArrowLeft, ArrowRight, Check, Cloud, AlertTriangle, ExternalLink } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
@@ -23,14 +24,20 @@ import stepLoggingImg from "@/assets/wizard/step-logging.jpg";
 import stepSupportImg from "@/assets/wizard/step-support.jpg";
 import stepAutomationImg from "@/assets/wizard/step-automation.jpg";
 
+// Use step-org image for identity gate too
 const stepImages = [
-  stepOrgImg, stepBillingImg, stepEnvImg, stepFoldersImg, stepNetworkImg,
+  stepOrgImg, stepOrgImg, stepBillingImg, stepEnvImg, stepFoldersImg, stepNetworkImg,
   stepIamImg, stepSecurityImg, stepLoggingImg, stepSupportImg, stepAutomationImg,
 ];
 
 const STORAGE_KEY = "lz-wizard-data";
 
 interface WizardData {
+  // Step 0: Identity Gate
+  workspaceExists: string; // "yes" | "no" | ""
+  identityOrgId: string;
+  identityDomain: string;
+  superAdminConfirmed: boolean;
   // Step 1: Org & Governance
   orgId: string;
   domain: string;
@@ -77,6 +84,7 @@ interface WizardData {
 }
 
 const defaultData: WizardData = {
+  workspaceExists: "", identityOrgId: "", identityDomain: "", superAdminConfirmed: false,
   orgId: "", domain: "", policyAutomation: "",
   billingId: "", budgetThreshold: "", alertRecipients: "",
   environments: [], customEnv: "",
@@ -91,6 +99,7 @@ const defaultData: WizardData = {
 };
 
 const stepTitles = [
+  "Identity & Organization Verification",
   "Organization & Governance",
   "Billing & Budget Controls",
   "Environment Strategy",
@@ -129,6 +138,14 @@ const WizardPage = () => {
     }));
   };
 
+  const isIdentityGateValid = () => {
+    if (data.workspaceExists !== "yes") return false;
+    if (!data.identityOrgId || !/^\d+$/.test(data.identityOrgId)) return false;
+    if (!data.identityDomain.trim()) return false;
+    if (!data.superAdminConfirmed) return false;
+    return true;
+  };
+
   const handleSubmit = async () => {
     if (!data.companyName || !data.email || !data.contactPerson) {
       toast.error("Please fill in all required contact fields.");
@@ -143,7 +160,7 @@ const WizardPage = () => {
       company_name: data.companyName,
       contact_person: data.contactPerson,
       email: data.email,
-      org_id: data.orgId,
+      org_id: data.identityOrgId || data.orgId,
       billing_account: data.billingId,
       environments: data.environments,
       network_model: data.networkModel,
@@ -153,6 +170,9 @@ const WizardPage = () => {
       budget_threshold: data.budgetThreshold ? Number(data.budgetThreshold) : null,
       timeline: data.timeline,
       status: "New",
+      workspace_exists: data.workspaceExists === "yes",
+      primary_domain: data.identityDomain || data.domain,
+      super_admin_confirmed: data.superAdminConfirmed,
     });
 
     if (error) {
@@ -186,8 +206,78 @@ const WizardPage = () => {
     switch (step) {
       case 0: return (
         <div className="space-y-6">
-          <div className={fieldClass}><Label>GCP Organization ID *</Label><Input placeholder="123456789012" value={data.orgId} onChange={e => update("orgId", e.target.value)} /></div>
-          <div className={fieldClass}><Label>Primary Domain *</Label><Input placeholder="company.com" value={data.domain} onChange={e => update("domain", e.target.value)} /></div>
+          <div className={fieldClass}>
+            <Label className="text-base font-semibold">Do you already have Google Workspace and a GCP Organization? *</Label>
+            <RadioGroup value={data.workspaceExists} onValueChange={v => update("workspaceExists", v)} className="mt-3">
+              <div className="flex items-center space-x-2 p-3 rounded-lg border bg-card">
+                <RadioGroupItem value="yes" id="ws-yes" />
+                <Label htmlFor="ws-yes" className="cursor-pointer">Yes</Label>
+              </div>
+              <div className="flex items-center space-x-2 p-3 rounded-lg border bg-card">
+                <RadioGroupItem value="no" id="ws-no" />
+                <Label htmlFor="ws-no" className="cursor-pointer">No</Label>
+              </div>
+            </RadioGroup>
+          </div>
+
+          {data.workspaceExists === "no" && (
+            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="p-4 rounded-lg border-2 border-destructive/50 bg-destructive/5 space-y-3">
+              <div className="flex items-start gap-3">
+                <AlertTriangle className="h-5 w-5 text-destructive shrink-0 mt-0.5" />
+                <div>
+                  <p className="font-semibold text-foreground">Google Workspace Required</p>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Before proceeding, you must register Google Workspace and verify your domain. Once completed, return with your Organization ID.
+                  </p>
+                </div>
+              </div>
+              <a
+                href="https://workspace.google.com/gcpidentity/signup?sku=identitybasic"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 text-sm font-medium text-primary hover:underline"
+              >
+                Register Google Workspace <ExternalLink className="h-4 w-4" />
+              </a>
+            </motion.div>
+          )}
+
+          {data.workspaceExists === "yes" && (
+            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
+              <div className={fieldClass}>
+                <Label>Organization ID * <span className="text-xs text-muted-foreground">(numeric only)</span></Label>
+                <Input
+                  placeholder="123456789012"
+                  value={data.identityOrgId}
+                  onChange={e => update("identityOrgId", e.target.value)}
+                />
+                {data.identityOrgId && !/^\d+$/.test(data.identityOrgId) && (
+                  <p className="text-sm text-destructive">Organization ID must be numeric only.</p>
+                )}
+              </div>
+              <div className={fieldClass}>
+                <Label>Primary Domain *</Label>
+                <Input
+                  placeholder="company.com"
+                  value={data.identityDomain}
+                  onChange={e => update("identityDomain", e.target.value)}
+                />
+              </div>
+              <div className="flex items-center space-x-2 p-3 rounded-lg border bg-card">
+                <Checkbox
+                  checked={data.superAdminConfirmed}
+                  onCheckedChange={v => update("superAdminConfirmed", !!v)}
+                />
+                <Label className="cursor-pointer">I confirm I have Super Admin access to Google Workspace *</Label>
+              </div>
+            </motion.div>
+          )}
+        </div>
+      );
+      case 1: return (
+        <div className="space-y-6">
+          <div className={fieldClass}><Label>GCP Organization ID *</Label><Input placeholder="123456789012" value={data.orgId || data.identityOrgId} onChange={e => update("orgId", e.target.value)} /></div>
+          <div className={fieldClass}><Label>Primary Domain *</Label><Input placeholder="company.com" value={data.domain || data.identityDomain} onChange={e => update("domain", e.target.value)} /></div>
           <div className={fieldClass}><Label>Organization Policy Automation</Label>
             <Select value={data.policyAutomation} onValueChange={v => update("policyAutomation", v)}>
               <SelectTrigger><SelectValue placeholder="Select preference" /></SelectTrigger>
@@ -200,14 +290,14 @@ const WizardPage = () => {
           </div>
         </div>
       );
-      case 1: return (
+      case 2: return (
         <div className="space-y-6">
           <div className={fieldClass}><Label>Billing Account ID *</Label><Input placeholder="0X0X0X-0X0X0X-0X0X0X" value={data.billingId} onChange={e => update("billingId", e.target.value)} /></div>
           <div className={fieldClass}><Label>Monthly Budget Threshold (USD)</Label><Input type="number" placeholder="10000" value={data.budgetThreshold} onChange={e => update("budgetThreshold", e.target.value)} /></div>
           <div className={fieldClass}><Label>Alert Recipients (comma-separated emails)</Label><Input placeholder="cto@company.com, finance@company.com" value={data.alertRecipients} onChange={e => update("alertRecipients", e.target.value)} /></div>
         </div>
       );
-      case 2: return (
+      case 3: return (
         <div className="space-y-6">
           <Label>Select Environments *</Label>
           <div className="grid grid-cols-2 gap-3">
@@ -221,7 +311,7 @@ const WizardPage = () => {
           <div className={fieldClass}><Label>Custom Environment (optional)</Label><Input placeholder="e.g., Sandbox, DR" value={data.customEnv} onChange={e => update("customEnv", e.target.value)} /></div>
         </div>
       );
-      case 3: return (
+      case 4: return (
         <div className="space-y-6">
           <div className={fieldClass}><Label>Folder Hierarchy Preference</Label>
             <Select value={data.folderPreference} onValueChange={v => update("folderPreference", v)}>
@@ -237,7 +327,7 @@ const WizardPage = () => {
           <div className={fieldClass}><Label>Additional Notes</Label><Textarea placeholder="Describe your preferred folder structure..." value={data.folderNotes} onChange={e => update("folderNotes", e.target.value)} /></div>
         </div>
       );
-      case 4: return (
+      case 5: return (
         <div className="space-y-6">
           <div className={fieldClass}><Label>Network Model *</Label>
             <Select value={data.networkModel} onValueChange={v => update("networkModel", v)}>
@@ -263,7 +353,7 @@ const WizardPage = () => {
           </div>
         </div>
       );
-      case 5: return (
+      case 6: return (
         <div className="space-y-6">
           <div className={fieldClass}><Label>IAM Model *</Label>
             <Select value={data.iamModel} onValueChange={v => update("iamModel", v)}>
@@ -288,7 +378,7 @@ const WizardPage = () => {
           </div>
         </div>
       );
-      case 6: return (
+      case 7: return (
         <div className="space-y-6">
           <div className={fieldClass}><Label>CIS Benchmark Level</Label>
             <Select value={data.cisLevel} onValueChange={v => update("cisLevel", v)}>
@@ -311,7 +401,7 @@ const WizardPage = () => {
           <div className={fieldClass}><Label>Additional Compliance Notes</Label><Textarea placeholder="SOC 2, HIPAA, ISO 27001, etc." value={data.complianceNotes} onChange={e => update("complianceNotes", e.target.value)} /></div>
         </div>
       );
-      case 7: return (
+      case 8: return (
         <div className="space-y-6">
           <div className="flex items-center space-x-2 p-3 rounded-lg border bg-card">
             <Checkbox checked={data.centralLogging} onCheckedChange={v => update("centralLogging", !!v)} />
@@ -342,7 +432,7 @@ const WizardPage = () => {
           </div>
         </div>
       );
-      case 8: return (
+      case 9: return (
         <div className="space-y-6">
           <Label className="text-base">Select a Google Cloud Support Plan *</Label>
           <div className="space-y-4">
@@ -373,7 +463,7 @@ const WizardPage = () => {
           </div>
         </div>
       );
-      case 9: return (
+      case 10: return (
         <div className="space-y-6">
           <div className={fieldClass}><Label>CI/CD Tool</Label>
             <Select value={data.cicdTool} onValueChange={v => update("cicdTool", v)}>
@@ -422,6 +512,30 @@ const WizardPage = () => {
       );
       default: return null;
     }
+  };
+
+  const canProceedFromStep = () => {
+    if (step === 0) return isIdentityGateValid();
+    if (step === 9 && !data.supportPlan) return false;
+    return true;
+  };
+
+  const handleNext = () => {
+    if (step === 0 && !isIdentityGateValid()) {
+      if (data.workspaceExists === "no") {
+        toast.error("You must have Google Workspace before proceeding.");
+      } else if (!data.workspaceExists) {
+        toast.error("Please select whether you have Google Workspace.");
+      } else {
+        toast.error("Please complete all required identity fields.");
+      }
+      return;
+    }
+    if (step === 9 && !data.supportPlan) {
+      toast.error("Please select a support plan before continuing.");
+      return;
+    }
+    setStep(s => s + 1);
   };
 
   return (
@@ -480,13 +594,7 @@ const WizardPage = () => {
               <ArrowLeft className="mr-2 h-4 w-4" /> Previous
             </Button>
             {step < stepTitles.length - 1 ? (
-              <Button onClick={() => {
-                if (step === 8 && !data.supportPlan) {
-                  toast.error("Please select a support plan before continuing.");
-                  return;
-                }
-                setStep(s => s + 1);
-              }}>
+              <Button onClick={handleNext} disabled={step === 0 && data.workspaceExists === "no"}>
                 Next <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
             ) : (
