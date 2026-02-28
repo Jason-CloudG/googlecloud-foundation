@@ -29,10 +29,13 @@ export type Database = {
           id: string
           network_model: string | null
           org_id: string | null
+          primary_domain: string | null
           regions: string[] | null
           status: string
+          super_admin_confirmed: boolean | null
           timeline: string | null
           updated_at: string
+          workspace_exists: boolean | null
         }
         Insert: {
           additional_notes?: string | null
@@ -48,10 +51,13 @@ export type Database = {
           id?: string
           network_model?: string | null
           org_id?: string | null
+          primary_domain?: string | null
           regions?: string[] | null
           status?: string
+          super_admin_confirmed?: boolean | null
           timeline?: string | null
           updated_at?: string
+          workspace_exists?: boolean | null
         }
         Update: {
           additional_notes?: string | null
@@ -67,10 +73,13 @@ export type Database = {
           id?: string
           network_model?: string | null
           org_id?: string | null
+          primary_domain?: string | null
           regions?: string[] | null
           status?: string
+          super_admin_confirmed?: boolean | null
           timeline?: string | null
           updated_at?: string
+          workspace_exists?: boolean | null
         }
         Relationships: []
       }
