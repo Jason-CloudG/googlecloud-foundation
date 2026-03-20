@@ -38,6 +38,7 @@ interface WizardData {
   identityOrgId: string;
   identityDomain: string;
   superAdminConfirmed: boolean;
+  superAdminSelection: string; // "yes" | "no" | ""
   // Step 1: Org & Governance
   orgId: string;
   domain: string;
