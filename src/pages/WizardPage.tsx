@@ -263,13 +263,51 @@ const WizardPage = () => {
                   onChange={e => update("identityDomain", e.target.value)}
                 />
               </div>
-              <div className="flex items-center space-x-2 p-3 rounded-lg border bg-card">
-                <Checkbox
-                  checked={data.superAdminConfirmed}
-                  onCheckedChange={v => update("superAdminConfirmed", !!v)}
-                />
-                <Label className="cursor-pointer">I confirm I have Super Admin access to Google Workspace *</Label>
+              <div className={fieldClass}>
+                <Label className="text-base font-semibold">Do you have Super Admin access to Google Workspace? *</Label>
+                <RadioGroup
+                  value={data.superAdminConfirmed ? "yes" : (data.superAdminConfirmed === false && data.workspaceExists === "yes" ? "no" : "")}
+                  onValueChange={v => {
+                    if (v === "yes") {
+                      update("superAdminConfirmed", true);
+                    } else {
+                      update("superAdminConfirmed", false);
+                    }
+                  }}
+                  className="mt-3"
+                >
+                  <div className="flex items-center space-x-2 p-3 rounded-lg border bg-card">
+                    <RadioGroupItem value="yes" id="sa-yes" />
+                    <Label htmlFor="sa-yes" className="cursor-pointer">Yes, I have Super Admin access</Label>
+                  </div>
+                  <div className="flex items-center space-x-2 p-3 rounded-lg border bg-card">
+                    <RadioGroupItem value="no" id="sa-no" />
+                    <Label htmlFor="sa-no" className="cursor-pointer">No, I don't have Super Admin access to Google Workspace</Label>
+                  </div>
+                </RadioGroup>
               </div>
+
+              {data.superAdminConfirmed === false && data.workspaceExists === "yes" && (
+                <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="p-4 rounded-lg border-2 border-destructive/50 bg-destructive/5 space-y-3">
+                  <div className="flex items-start gap-3">
+                    <AlertTriangle className="h-5 w-5 text-destructive shrink-0 mt-0.5" />
+                    <div>
+                      <p className="font-semibold text-foreground">Super Admin Access Required</p>
+                      <p className="text-sm text-muted-foreground mt-1">
+                        You need Super Admin access to proceed. Use the link below to recover or verify your Super Admin user details.
+                      </p>
+                    </div>
+                  </div>
+                  <a
+                    href="https://toolbox.googleapps.com/apps/recovery/form"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 text-sm font-medium text-primary hover:underline"
+                  >
+                    Recover Super Admin Access <ExternalLink className="h-4 w-4" />
+                  </a>
+                </motion.div>
+              )}
             </motion.div>
           )}
         </div>
