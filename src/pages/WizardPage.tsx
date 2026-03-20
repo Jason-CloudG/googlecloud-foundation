@@ -85,7 +85,7 @@ interface WizardData {
 }
 
 const defaultData: WizardData = {
-  workspaceExists: "", identityOrgId: "", identityDomain: "", superAdminConfirmed: false,
+  workspaceExists: "", identityOrgId: "", identityDomain: "", superAdminConfirmed: false, superAdminSelection: "",
   orgId: "", domain: "", policyAutomation: "",
   billingId: "", budgetThreshold: "", alertRecipients: "",
   environments: [], customEnv: "",
