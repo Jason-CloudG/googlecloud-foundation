@@ -267,13 +267,10 @@ const WizardPage = () => {
               <div className={fieldClass}>
                 <Label className="text-base font-semibold">Do you have Super Admin access to Google Workspace? *</Label>
                 <RadioGroup
-                  value={data.superAdminConfirmed ? "yes" : (data.superAdminConfirmed === false && data.workspaceExists === "yes" ? "no" : "")}
+                  value={data.superAdminSelection}
                   onValueChange={v => {
-                    if (v === "yes") {
-                      update("superAdminConfirmed", true);
-                    } else {
-                      update("superAdminConfirmed", false);
-                    }
+                    update("superAdminSelection", v);
+                    update("superAdminConfirmed", v === "yes");
                   }}
                   className="mt-3"
                 >
@@ -288,7 +285,7 @@ const WizardPage = () => {
                 </RadioGroup>
               </div>
 
-              {data.superAdminConfirmed === false && data.workspaceExists === "yes" && (
+              {data.superAdminSelection === "no" && (
                 <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="p-4 rounded-lg border-2 border-destructive/50 bg-destructive/5 space-y-3">
                   <div className="flex items-start gap-3">
                     <AlertTriangle className="h-5 w-5 text-destructive shrink-0 mt-0.5" />
