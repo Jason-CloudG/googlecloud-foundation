@@ -348,22 +348,117 @@ const WizardPage = () => {
           <div className={fieldClass}><Label>Custom Environment (optional)</Label><Input placeholder="e.g., Sandbox, DR" value={data.customEnv} onChange={e => update("customEnv", e.target.value)} /></div>
         </div>
       );
-      case 4: return (
-        <div className="space-y-6">
-          <div className={fieldClass}><Label>Folder Hierarchy Preference</Label>
-            <Select value={data.folderPreference} onValueChange={v => update("folderPreference", v)}>
-              <SelectTrigger><SelectValue placeholder="Select structure" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="env-based">Environment-Based (Dev/Test/Prod)</SelectItem>
-                <SelectItem value="team-based">Team/BU-Based</SelectItem>
-                <SelectItem value="hybrid">Hybrid (Env + Team)</SelectItem>
-                <SelectItem value="custom">Custom</SelectItem>
-              </SelectContent>
-            </Select>
+      case 4: {
+        const folderOptions = [
+          {
+            value: "env-based",
+            label: "Environment-Based (Dev/Test/Prod)",
+            architecture: [
+              "Organization",
+              "├── Folder: Development",
+              "│   ├── Project: app-dev",
+              "│   └── Project: data-dev",
+              "├── Folder: Testing",
+              "│   ├── Project: app-test",
+              "│   └── Project: data-test",
+              "├── Folder: Staging",
+              "│   └── Project: app-staging",
+              "└── Folder: Production",
+              "    ├── Project: app-prod",
+              "    └── Project: data-prod",
+            ],
+            description: "Organizes projects by lifecycle stage. Best for teams with clear dev → prod promotion workflows.",
+          },
+          {
+            value: "team-based",
+            label: "Team/BU-Based",
+            architecture: [
+              "Organization",
+              "├── Folder: Engineering",
+              "│   ├── Project: eng-backend",
+              "│   └── Project: eng-frontend",
+              "├── Folder: Data Science",
+              "│   ├── Project: ds-analytics",
+              "│   └── Project: ds-ml-pipelines",
+              "├── Folder: Marketing",
+              "│   └── Project: mkt-campaigns",
+              "└── Folder: Finance",
+              "    └── Project: fin-reporting",
+            ],
+            description: "Organizes by business unit or team. Best for large orgs with autonomous teams and separate budgets.",
+          },
+          {
+            value: "hybrid",
+            label: "Hybrid (Env + Team)",
+            architecture: [
+              "Organization",
+              "├── Folder: Engineering",
+              "│   ├── Folder: Dev",
+              "│   │   └── Project: eng-app-dev",
+              "│   ├── Folder: Staging",
+              "│   │   └── Project: eng-app-staging",
+              "│   └── Folder: Prod",
+              "│       └── Project: eng-app-prod",
+              "├── Folder: Data Science",
+              "│   ├── Folder: Dev",
+              "│   │   └── Project: ds-ml-dev",
+              "│   └── Folder: Prod",
+              "│       └── Project: ds-ml-prod",
+            ],
+            description: "Combines team isolation with environment separation. Best for enterprises needing both team autonomy and lifecycle controls.",
+          },
+          {
+            value: "custom",
+            label: "Custom",
+            architecture: [
+              "Organization",
+              "├── Folder: [Your Structure]",
+              "│   ├── Folder: [Sub-group A]",
+              "│   │   └── Project: [project-a]",
+              "│   └── Folder: [Sub-group B]",
+              "│       └── Project: [project-b]",
+              "└── Folder: [Shared Services]",
+              "    └── Project: [shared-infra]",
+            ],
+            description: "Define your own folder hierarchy. Describe your preferred structure in the notes below.",
+          },
+        ];
+
+        return (
+          <div className="space-y-6">
+            <div className={fieldClass}>
+              <Label>Folder Hierarchy Preference</Label>
+              <div className="grid gap-3 mt-2">
+                {folderOptions.map(opt => (
+                  <HoverCard key={opt.value} openDelay={200} closeDelay={100}>
+                    <HoverCardTrigger asChild>
+                      <div
+                        onClick={() => update("folderPreference", opt.value)}
+                        className={`flex items-center justify-between p-4 rounded-lg border cursor-pointer transition-all ${
+                          data.folderPreference === opt.value
+                            ? "border-primary bg-primary/5 ring-1 ring-primary/30"
+                            : "border-border bg-card hover:border-primary/40"
+                        }`}
+                      >
+                        <span className="text-sm font-medium text-foreground">{opt.label}</span>
+                        <Info className="h-4 w-4 text-muted-foreground shrink-0" />
+                      </div>
+                    </HoverCardTrigger>
+                    <HoverCardContent side="right" align="start" className="w-80 p-4">
+                      <p className="text-sm font-semibold text-foreground mb-2">{opt.label}</p>
+                      <p className="text-xs text-muted-foreground mb-3">{opt.description}</p>
+                      <div className="bg-muted rounded-md p-3 font-mono text-xs text-foreground leading-relaxed whitespace-pre">
+                        {opt.architecture.join("\n")}
+                      </div>
+                    </HoverCardContent>
+                  </HoverCard>
+                ))}
+              </div>
+            </div>
+            <div className={fieldClass}><Label>Additional Notes</Label><Textarea placeholder="Describe your preferred folder structure..." value={data.folderNotes} onChange={e => update("folderNotes", e.target.value)} /></div>
           </div>
-          <div className={fieldClass}><Label>Additional Notes</Label><Textarea placeholder="Describe your preferred folder structure..." value={data.folderNotes} onChange={e => update("folderNotes", e.target.value)} /></div>
-        </div>
-      );
+        );
+      }
       case 5: return (
         <div className="space-y-6">
           <div className={fieldClass}><Label>Network Model *</Label>
