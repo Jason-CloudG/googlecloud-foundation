@@ -459,32 +459,128 @@ const WizardPage = () => {
           </div>
         );
       }
-      case 5: return (
-        <div className="space-y-6">
-          <div className={fieldClass}><Label>Network Model *</Label>
-            <Select value={data.networkModel} onValueChange={v => update("networkModel", v)}>
-              <SelectTrigger><SelectValue placeholder="Select model" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="shared-vpc">Shared VPC (Recommended)</SelectItem>
-                <SelectItem value="per-project">Per-Project VPC</SelectItem>
-                <SelectItem value="hub-spoke">Hub & Spoke</SelectItem>
-              </SelectContent>
-            </Select>
+      case 5: {
+        const networkOptions = [
+          {
+            value: "shared-vpc",
+            label: "Shared VPC (Recommended)",
+            description: "Centralized network management. Host project owns VPCs, service projects attach. Best for enterprises needing consistent network policies.",
+            architecture: [
+              "Organization",
+              "├── Host Project (Shared VPC)",
+              "│   ├── VPC: shared-network",
+              "│   │   ├── Subnet: dev (10.0.1.0/24)",
+              "│   │   ├── Subnet: staging (10.0.2.0/24)",
+              "│   │   └── Subnet: prod (10.0.3.0/24)",
+              "│   ├── Cloud Router",
+              "│   ├── Cloud NAT",
+              "│   └── Firewall Rules (centralized)",
+              "├── Service Project: app-dev",
+              "│   └── Uses: shared-network/dev",
+              "├── Service Project: app-staging",
+              "│   └── Uses: shared-network/staging",
+              "└── Service Project: app-prod",
+              "    └── Uses: shared-network/prod",
+            ],
+          },
+          {
+            value: "per-project",
+            label: "Per-Project VPC",
+            description: "Each project gets its own VPC. Maximum isolation but more management overhead. Good for independent teams or strict compliance boundaries.",
+            architecture: [
+              "Organization",
+              "├── Project: app-dev",
+              "│   └── VPC: dev-network",
+              "│       ├── Subnet: default (10.1.0.0/24)",
+              "│       ├── Cloud Router",
+              "│       ├── Cloud NAT",
+              "│       └── Firewall Rules",
+              "├── Project: app-staging",
+              "│   └── VPC: staging-network",
+              "│       ├── Subnet: default (10.2.0.0/24)",
+              "│       ├── Cloud Router",
+              "│       └── Firewall Rules",
+              "└── Project: app-prod",
+              "    └── VPC: prod-network",
+              "        ├── Subnet: default (10.3.0.0/24)",
+              "        ├── Cloud Router",
+              "        ├── Cloud NAT",
+              "        └── Firewall Rules",
+            ],
+          },
+          {
+            value: "hub-spoke",
+            label: "Hub & Spoke",
+            description: "Central hub VPC connects to spoke VPCs via peering. Balances isolation with centralized egress/ingress and shared services.",
+            architecture: [
+              "Organization",
+              "├── Hub Project",
+              "│   └── VPC: hub-network",
+              "│       ├── Subnet: shared-services (10.0.0.0/24)",
+              "│       ├── Cloud Router + Cloud NAT",
+              "│       ├── Cloud VPN / Interconnect",
+              "│       └── Firewall Rules (centralized)",
+              "├── Spoke: dev-project",
+              "│   └── VPC: dev-spoke",
+              "│       ├── Subnet: workloads (10.1.0.0/24)",
+              "│       └── Peering → hub-network",
+              "├── Spoke: staging-project",
+              "│   └── VPC: staging-spoke",
+              "│       ├── Subnet: workloads (10.2.0.0/24)",
+              "│       └── Peering → hub-network",
+              "└── Spoke: prod-project",
+              "    └── VPC: prod-spoke",
+              "        ├── Subnet: workloads (10.3.0.0/24)",
+              "        └── Peering → hub-network",
+            ],
+          },
+        ];
+        return (
+          <div className="space-y-6">
+            <div className={fieldClass}>
+              <Label>Network Model *</Label>
+              <div className="grid gap-3 mt-2">
+                {networkOptions.map(opt => (
+                  <HoverCard key={opt.value} openDelay={200} closeDelay={100}>
+                    <HoverCardTrigger asChild>
+                      <div
+                        onClick={() => update("networkModel", opt.value)}
+                        className={`flex items-center justify-between p-4 rounded-lg border cursor-pointer transition-all ${
+                          data.networkModel === opt.value
+                            ? "border-primary bg-primary/5 ring-1 ring-primary/30"
+                            : "border-border bg-card hover:border-primary/40"
+                        }`}
+                      >
+                        <span className="text-sm font-medium text-foreground">{opt.label}</span>
+                        <Info className="h-4 w-4 text-muted-foreground shrink-0" />
+                      </div>
+                    </HoverCardTrigger>
+                    <HoverCardContent side="right" align="start" className="w-96 p-4">
+                      <p className="text-sm font-semibold text-foreground mb-2">{opt.label}</p>
+                      <p className="text-xs text-muted-foreground mb-3">{opt.description}</p>
+                      <div className="bg-muted rounded-md p-3 font-mono text-xs text-foreground leading-relaxed whitespace-pre">
+                        {opt.architecture.join("\n")}
+                      </div>
+                    </HoverCardContent>
+                  </HoverCard>
+                ))}
+              </div>
+            </div>
+            <div className={fieldClass}><Label>Primary Regions (comma-separated)</Label><Input placeholder="us-central1, europe-west1" value={data.regions} onChange={e => update("regions", e.target.value)} /></div>
+            <div className={fieldClass}><Label>Hybrid Connectivity</Label>
+              <Select value={data.hybridConnectivity} onValueChange={v => update("hybridConnectivity", v)}>
+                <SelectTrigger><SelectValue placeholder="Select option" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">None</SelectItem>
+                  <SelectItem value="vpn">Cloud VPN</SelectItem>
+                  <SelectItem value="interconnect">Dedicated Interconnect</SelectItem>
+                  <SelectItem value="partner">Partner Interconnect</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
-          <div className={fieldClass}><Label>Primary Regions (comma-separated)</Label><Input placeholder="us-central1, europe-west1" value={data.regions} onChange={e => update("regions", e.target.value)} /></div>
-          <div className={fieldClass}><Label>Hybrid Connectivity</Label>
-            <Select value={data.hybridConnectivity} onValueChange={v => update("hybridConnectivity", v)}>
-              <SelectTrigger><SelectValue placeholder="Select option" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="none">None</SelectItem>
-                <SelectItem value="vpn">Cloud VPN</SelectItem>
-                <SelectItem value="interconnect">Dedicated Interconnect</SelectItem>
-                <SelectItem value="partner">Partner Interconnect</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-      );
+        );
+      }
       case 6: return (
         <div className="space-y-6">
           <div className={fieldClass}><Label>IAM Model *</Label>
