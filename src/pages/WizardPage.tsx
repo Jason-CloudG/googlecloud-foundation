@@ -632,7 +632,13 @@ const WizardPage = () => {
                 ))}
               </div>
             </div>
-            <div className={fieldClass}><Label>Primary Regions (comma-separated)</Label><Input placeholder="us-central1, europe-west1" value={data.regions} onChange={e => update("regions", e.target.value)} /></div>
+            <div className={fieldClass}>
+              <Label>Primary Regions</Label>
+              <GCPRegionSelector
+                selected={data.regions ? data.regions.split(",").map(r => r.trim()).filter(Boolean) : []}
+                onChange={(regions) => update("regions", regions.join(", "))}
+              />
+            </div>
             <div className={fieldClass}><Label>Hybrid Connectivity</Label>
               <Select value={data.hybridConnectivity} onValueChange={v => update("hybridConnectivity", v)}>
                 <SelectTrigger><SelectValue placeholder="Select option" /></SelectTrigger>
