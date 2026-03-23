@@ -9,7 +9,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card } from "@/components/ui/card";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
-import { ArrowLeft, ArrowRight, Check, Cloud, AlertTriangle, ExternalLink, Info } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, Cloud, AlertTriangle, ExternalLink, Info, Search, X } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import { Link, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
@@ -478,6 +479,103 @@ const WizardPage = () => {
           },
         ];
 
+        const GCP_REGIONS = [
+          { value: "us-central1", label: "us-central1 (Iowa)" },
+          { value: "us-east1", label: "us-east1 (South Carolina)" },
+          { value: "us-east4", label: "us-east4 (Northern Virginia)" },
+          { value: "us-east5", label: "us-east5 (Columbus)" },
+          { value: "us-south1", label: "us-south1 (Dallas)" },
+          { value: "us-west1", label: "us-west1 (Oregon)" },
+          { value: "us-west2", label: "us-west2 (Los Angeles)" },
+          { value: "us-west3", label: "us-west3 (Salt Lake City)" },
+          { value: "us-west4", label: "us-west4 (Las Vegas)" },
+          { value: "northamerica-northeast1", label: "northamerica-northeast1 (Montréal)" },
+          { value: "northamerica-northeast2", label: "northamerica-northeast2 (Toronto)" },
+          { value: "southamerica-east1", label: "southamerica-east1 (São Paulo)" },
+          { value: "southamerica-west1", label: "southamerica-west1 (Santiago)" },
+          { value: "europe-west1", label: "europe-west1 (Belgium)" },
+          { value: "europe-west2", label: "europe-west2 (London)" },
+          { value: "europe-west3", label: "europe-west3 (Frankfurt)" },
+          { value: "europe-west4", label: "europe-west4 (Netherlands)" },
+          { value: "europe-west6", label: "europe-west6 (Zürich)" },
+          { value: "europe-west8", label: "europe-west8 (Milan)" },
+          { value: "europe-west9", label: "europe-west9 (Paris)" },
+          { value: "europe-west10", label: "europe-west10 (Berlin)" },
+          { value: "europe-west12", label: "europe-west12 (Turin)" },
+          { value: "europe-north1", label: "europe-north1 (Finland)" },
+          { value: "europe-central2", label: "europe-central2 (Warsaw)" },
+          { value: "europe-southwest1", label: "europe-southwest1 (Madrid)" },
+          { value: "asia-south1", label: "asia-south1 (Mumbai)" },
+          { value: "asia-south2", label: "asia-south2 (Delhi)" },
+          { value: "asia-southeast1", label: "asia-southeast1 (Singapore)" },
+          { value: "asia-southeast2", label: "asia-southeast2 (Jakarta)" },
+          { value: "asia-east1", label: "asia-east1 (Taiwan)" },
+          { value: "asia-east2", label: "asia-east2 (Hong Kong)" },
+          { value: "asia-northeast1", label: "asia-northeast1 (Tokyo)" },
+          { value: "asia-northeast2", label: "asia-northeast2 (Osaka)" },
+          { value: "asia-northeast3", label: "asia-northeast3 (Seoul)" },
+          { value: "australia-southeast1", label: "australia-southeast1 (Sydney)" },
+          { value: "australia-southeast2", label: "australia-southeast2 (Melbourne)" },
+          { value: "me-west1", label: "me-west1 (Tel Aviv)" },
+          { value: "me-central1", label: "me-central1 (Doha)" },
+          { value: "me-central2", label: "me-central2 (Dammam)" },
+          { value: "africa-south1", label: "africa-south1 (Johannesburg)" },
+        ];
+
+        const GCPRegionSelector = ({ selected, onChange }: { selected: string[]; onChange: (v: string[]) => void }) => {
+          const [search, setSearch] = useState("");
+          const [open, setOpen] = useState(false);
+          const filtered = GCP_REGIONS.filter(r => r.label.toLowerCase().includes(search.toLowerCase()));
+          const toggle = (val: string) => {
+            onChange(selected.includes(val) ? selected.filter(v => v !== val) : [...selected, val]);
+          };
+          return (
+            <div className="relative">
+              <div className="flex flex-wrap gap-1.5 mb-2 min-h-[28px]">
+                {selected.map(s => {
+                  const region = GCP_REGIONS.find(r => r.value === s);
+                  return (
+                    <Badge key={s} variant="secondary" className="text-xs gap-1 pr-1">
+                      {region?.label || s}
+                      <button type="button" onClick={() => toggle(s)} className="ml-0.5 hover:text-destructive">
+                        <X className="h-3 w-3" />
+                      </button>
+                    </Badge>
+                  );
+                })}
+              </div>
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search GCP regions..."
+                  value={search}
+                  onChange={e => { setSearch(e.target.value); setOpen(true); }}
+                  onFocus={() => setOpen(true)}
+                  className="pl-9"
+                />
+              </div>
+              {open && (
+                <div className="absolute z-50 mt-1 w-full max-h-48 overflow-y-auto rounded-md border bg-popover shadow-md">
+                  {filtered.length === 0 && <p className="text-sm text-muted-foreground p-3">No regions found</p>}
+                  {filtered.map(r => (
+                    <div
+                      key={r.value}
+                      onClick={() => toggle(r.value)}
+                      className={`flex items-center gap-2 px-3 py-2 text-sm cursor-pointer hover:bg-accent transition-colors ${selected.includes(r.value) ? "bg-primary/10 text-primary font-medium" : "text-foreground"}`}
+                    >
+                      <div className={`h-4 w-4 rounded border flex items-center justify-center shrink-0 ${selected.includes(r.value) ? "bg-primary border-primary" : "border-input"}`}>
+                        {selected.includes(r.value) && <Check className="h-3 w-3 text-primary-foreground" />}
+                      </div>
+                      {r.label}
+                    </div>
+                  ))}
+                </div>
+              )}
+              {open && <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />}
+            </div>
+          );
+        };
+
         const NetworkDiagram = ({ type }: { type: string }) => {
           if (type === "shared-vpc") {
             return (
@@ -632,7 +730,13 @@ const WizardPage = () => {
                 ))}
               </div>
             </div>
-            <div className={fieldClass}><Label>Primary Regions (comma-separated)</Label><Input placeholder="us-central1, europe-west1" value={data.regions} onChange={e => update("regions", e.target.value)} /></div>
+            <div className={fieldClass}>
+              <Label>Primary Regions</Label>
+              <GCPRegionSelector
+                selected={data.regions ? data.regions.split(",").map(r => r.trim()).filter(Boolean) : []}
+                onChange={(regions) => update("regions", regions.join(", "))}
+              />
+            </div>
             <div className={fieldClass}><Label>Hybrid Connectivity</Label>
               <Select value={data.hybridConnectivity} onValueChange={v => update("hybridConnectivity", v)}>
                 <SelectTrigger><SelectValue placeholder="Select option" /></SelectTrigger>
