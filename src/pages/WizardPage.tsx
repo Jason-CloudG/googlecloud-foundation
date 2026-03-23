@@ -465,76 +465,142 @@ const WizardPage = () => {
             value: "shared-vpc",
             label: "Shared VPC (Recommended)",
             description: "Centralized network management. Host project owns VPCs, service projects attach. Best for enterprises needing consistent network policies.",
-            architecture: [
-              "Organization",
-              "├── Host Project (Shared VPC)",
-              "│   ├── VPC: shared-network",
-              "│   │   ├── Subnet: dev (10.0.1.0/24)",
-              "│   │   ├── Subnet: staging (10.0.2.0/24)",
-              "│   │   └── Subnet: prod (10.0.3.0/24)",
-              "│   ├── Cloud Router",
-              "│   ├── Cloud NAT",
-              "│   └── Firewall Rules (centralized)",
-              "├── Service Project: app-dev",
-              "│   └── Uses: shared-network/dev",
-              "├── Service Project: app-staging",
-              "│   └── Uses: shared-network/staging",
-              "└── Service Project: app-prod",
-              "    └── Uses: shared-network/prod",
-            ],
           },
           {
             value: "per-project",
             label: "Per-Project VPC",
             description: "Each project gets its own VPC. Maximum isolation but more management overhead. Good for independent teams or strict compliance boundaries.",
-            architecture: [
-              "Organization",
-              "├── Project: app-dev",
-              "│   └── VPC: dev-network",
-              "│       ├── Subnet: default (10.1.0.0/24)",
-              "│       ├── Cloud Router",
-              "│       ├── Cloud NAT",
-              "│       └── Firewall Rules",
-              "├── Project: app-staging",
-              "│   └── VPC: staging-network",
-              "│       ├── Subnet: default (10.2.0.0/24)",
-              "│       ├── Cloud Router",
-              "│       └── Firewall Rules",
-              "└── Project: app-prod",
-              "    └── VPC: prod-network",
-              "        ├── Subnet: default (10.3.0.0/24)",
-              "        ├── Cloud Router",
-              "        ├── Cloud NAT",
-              "        └── Firewall Rules",
-            ],
           },
           {
             value: "hub-spoke",
             label: "Hub & Spoke",
             description: "Central hub VPC connects to spoke VPCs via peering. Balances isolation with centralized egress/ingress and shared services.",
-            architecture: [
-              "Organization",
-              "├── Hub Project",
-              "│   └── VPC: hub-network",
-              "│       ├── Subnet: shared-services (10.0.0.0/24)",
-              "│       ├── Cloud Router + Cloud NAT",
-              "│       ├── Cloud VPN / Interconnect",
-              "│       └── Firewall Rules (centralized)",
-              "├── Spoke: dev-project",
-              "│   └── VPC: dev-spoke",
-              "│       ├── Subnet: workloads (10.1.0.0/24)",
-              "│       └── Peering → hub-network",
-              "├── Spoke: staging-project",
-              "│   └── VPC: staging-spoke",
-              "│       ├── Subnet: workloads (10.2.0.0/24)",
-              "│       └── Peering → hub-network",
-              "└── Spoke: prod-project",
-              "    └── VPC: prod-spoke",
-              "        ├── Subnet: workloads (10.3.0.0/24)",
-              "        └── Peering → hub-network",
-            ],
           },
         ];
+
+        const NetworkDiagram = ({ type }: { type: string }) => {
+          if (type === "shared-vpc") {
+            return (
+              <svg viewBox="0 0 360 280" className="w-full" xmlns="http://www.w3.org/2000/svg">
+                {/* Host Project */}
+                <rect x="100" y="10" width="160" height="36" rx="8" className="fill-primary/20 stroke-primary" strokeWidth="1.5" />
+                <text x="180" y="33" textAnchor="middle" className="fill-foreground text-[11px] font-semibold">Host Project (Shared VPC)</text>
+                
+                {/* VPC Box */}
+                <rect x="60" y="60" width="240" height="100" rx="6" className="fill-accent/10 stroke-accent/60" strokeWidth="1" strokeDasharray="4 2" />
+                <text x="180" y="78" textAnchor="middle" className="fill-accent text-[10px] font-medium">VPC: shared-network</text>
+                
+                {/* Subnets */}
+                <rect x="75" y="90" width="60" height="26" rx="4" className="fill-primary/15 stroke-primary/50" strokeWidth="1" />
+                <text x="105" y="107" textAnchor="middle" className="fill-foreground text-[8px]">Dev Subnet</text>
+                <rect x="150" y="90" width="60" height="26" rx="4" className="fill-primary/15 stroke-primary/50" strokeWidth="1" />
+                <text x="180" y="107" textAnchor="middle" className="fill-foreground text-[8px]">Stg Subnet</text>
+                <rect x="225" y="90" width="60" height="26" rx="4" className="fill-primary/15 stroke-primary/50" strokeWidth="1" />
+                <text x="255" y="107" textAnchor="middle" className="fill-foreground text-[8px]">Prod Subnet</text>
+                
+                {/* Shared Services */}
+                <rect x="110" y="126" width="50" height="22" rx="3" className="fill-muted stroke-border" strokeWidth="1" />
+                <text x="135" y="140" textAnchor="middle" className="fill-muted-foreground text-[7px]">Router</text>
+                <rect x="170" y="126" width="50" height="22" rx="3" className="fill-muted stroke-border" strokeWidth="1" />
+                <text x="195" y="140" textAnchor="middle" className="fill-muted-foreground text-[7px]">NAT</text>
+                
+                {/* Connectors */}
+                <line x1="105" y1="116" x2="105" y2="190" className="stroke-primary/40" strokeWidth="1" strokeDasharray="3 2" />
+                <line x1="180" y1="116" x2="180" y2="220" className="stroke-primary/40" strokeWidth="1" strokeDasharray="3 2" />
+                <line x1="255" y1="116" x2="255" y2="250" className="stroke-primary/40" strokeWidth="1" strokeDasharray="3 2" />
+                
+                {/* Service Projects */}
+                <rect x="60" y="190" width="90" height="30" rx="6" className="fill-card stroke-border" strokeWidth="1" />
+                <text x="105" y="209" textAnchor="middle" className="fill-foreground text-[9px]">🖥 app-dev</text>
+                <rect x="135" y="220" width="90" height="30" rx="6" className="fill-card stroke-border" strokeWidth="1" />
+                <text x="180" y="239" textAnchor="middle" className="fill-foreground text-[9px]">🖥 app-staging</text>
+                <rect x="210" y="250" width="90" height="30" rx="6" className="fill-card stroke-border" strokeWidth="1" />
+                <text x="255" y="269" textAnchor="middle" className="fill-foreground text-[9px]">🖥 app-prod</text>
+              </svg>
+            );
+          }
+          if (type === "per-project") {
+            return (
+              <svg viewBox="0 0 360 260" className="w-full" xmlns="http://www.w3.org/2000/svg">
+                {/* Organization */}
+                <rect x="120" y="5" width="120" height="30" rx="8" className="fill-primary/20 stroke-primary" strokeWidth="1.5" />
+                <text x="180" y="24" textAnchor="middle" className="fill-foreground text-[11px] font-semibold">Organization</text>
+                
+                {/* Lines down */}
+                <line x1="90" y1="35" x2="90" y2="70" className="stroke-primary/40" strokeWidth="1.5" />
+                <line x1="180" y1="35" x2="180" y2="70" className="stroke-primary/40" strokeWidth="1.5" />
+                <line x1="270" y1="35" x2="270" y2="70" className="stroke-primary/40" strokeWidth="1.5" />
+                <line x1="90" y1="35" x2="270" y2="35" className="stroke-primary/40" strokeWidth="1.5" />
+                
+                {/* Project 1 */}
+                <rect x="30" y="70" width="120" height="170" rx="8" className="fill-accent/5 stroke-accent/40" strokeWidth="1" />
+                <text x="90" y="90" textAnchor="middle" className="fill-accent text-[10px] font-medium">Dev Project</text>
+                <rect x="42" y="100" width="96" height="24" rx="4" className="fill-primary/10 stroke-primary/40" strokeWidth="1" />
+                <text x="90" y="116" textAnchor="middle" className="fill-foreground text-[8px]">VPC: dev-net</text>
+                <rect x="50" y="132" width="80" height="18" rx="3" className="fill-muted stroke-border" strokeWidth="0.5" />
+                <text x="90" y="145" textAnchor="middle" className="fill-muted-foreground text-[7px]">10.1.0.0/24</text>
+                <rect x="50" y="156" width="80" height="18" rx="3" className="fill-muted stroke-border" strokeWidth="0.5" />
+                <text x="90" y="169" textAnchor="middle" className="fill-muted-foreground text-[7px]">Router + NAT</text>
+                <rect x="50" y="180" width="80" height="18" rx="3" className="fill-muted stroke-border" strokeWidth="0.5" />
+                <text x="90" y="193" textAnchor="middle" className="fill-muted-foreground text-[7px]">Firewall Rules</text>
+                
+                {/* Project 2 */}
+                <rect x="160" y="70" width="120" height="170" rx="8" className="fill-accent/5 stroke-accent/40" strokeWidth="1" />
+                <text x="220" y="90" textAnchor="middle" className="fill-accent text-[10px] font-medium">Staging Project</text>
+                <rect x="172" y="100" width="96" height="24" rx="4" className="fill-primary/10 stroke-primary/40" strokeWidth="1" />
+                <text x="220" y="116" textAnchor="middle" className="fill-foreground text-[8px]">VPC: stg-net</text>
+                <rect x="180" y="132" width="80" height="18" rx="3" className="fill-muted stroke-border" strokeWidth="0.5" />
+                <text x="220" y="145" textAnchor="middle" className="fill-muted-foreground text-[7px]">10.2.0.0/24</text>
+                <rect x="180" y="156" width="80" height="18" rx="3" className="fill-muted stroke-border" strokeWidth="0.5" />
+                <text x="220" y="169" textAnchor="middle" className="fill-muted-foreground text-[7px]">Router + NAT</text>
+                <rect x="180" y="180" width="80" height="18" rx="3" className="fill-muted stroke-border" strokeWidth="0.5" />
+                <text x="220" y="193" textAnchor="middle" className="fill-muted-foreground text-[7px]">Firewall Rules</text>
+
+                {/* No-share indicator */}
+                <text x="155" y="225" textAnchor="middle" className="fill-destructive text-[18px]">✕</text>
+                <text x="155" y="248" textAnchor="middle" className="fill-muted-foreground text-[7px]">Isolated</text>
+              </svg>
+            );
+          }
+          // hub-spoke
+          return (
+            <svg viewBox="0 0 360 300" className="w-full" xmlns="http://www.w3.org/2000/svg">
+              {/* Hub */}
+              <circle cx="180" cy="130" r="55" className="fill-primary/10 stroke-primary" strokeWidth="2" />
+              <text x="180" y="120" textAnchor="middle" className="fill-foreground text-[11px] font-semibold">Hub VPC</text>
+              <text x="180" y="135" textAnchor="middle" className="fill-muted-foreground text-[8px]">Shared Services</text>
+              <text x="180" y="148" textAnchor="middle" className="fill-muted-foreground text-[8px]">Router • NAT • VPN</text>
+              
+              {/* Spokes */}
+              {/* Dev spoke - left */}
+              <line x1="130" y1="150" x2="60" y2="230" className="stroke-accent" strokeWidth="1.5" strokeDasharray="5 3" />
+              <rect x="15" y="220" width="90" height="60" rx="8" className="fill-accent/10 stroke-accent/60" strokeWidth="1.5" />
+              <text x="60" y="242" textAnchor="middle" className="fill-foreground text-[10px] font-medium">Dev Spoke</text>
+              <text x="60" y="256" textAnchor="middle" className="fill-muted-foreground text-[8px]">10.1.0.0/24</text>
+              <text x="60" y="270" textAnchor="middle" className="fill-accent text-[7px]">⟷ Peering</text>
+              
+              {/* Staging spoke - center */}
+              <line x1="180" y1="185" x2="180" y2="220" className="stroke-accent" strokeWidth="1.5" strokeDasharray="5 3" />
+              <rect x="135" y="220" width="90" height="60" rx="8" className="fill-accent/10 stroke-accent/60" strokeWidth="1.5" />
+              <text x="180" y="242" textAnchor="middle" className="fill-foreground text-[10px] font-medium">Staging Spoke</text>
+              <text x="180" y="256" textAnchor="middle" className="fill-muted-foreground text-[8px]">10.2.0.0/24</text>
+              <text x="180" y="270" textAnchor="middle" className="fill-accent text-[7px]">⟷ Peering</text>
+              
+              {/* Prod spoke - right */}
+              <line x1="230" y1="150" x2="300" y2="230" className="stroke-accent" strokeWidth="1.5" strokeDasharray="5 3" />
+              <rect x="255" y="220" width="90" height="60" rx="8" className="fill-accent/10 stroke-accent/60" strokeWidth="1.5" />
+              <text x="300" y="242" textAnchor="middle" className="fill-foreground text-[10px] font-medium">Prod Spoke</text>
+              <text x="300" y="256" textAnchor="middle" className="fill-muted-foreground text-[8px]">10.3.0.0/24</text>
+              <text x="300" y="270" textAnchor="middle" className="fill-accent text-[7px]">⟷ Peering</text>
+              
+              {/* On-prem */}
+              <line x1="180" y1="75" x2="180" y2="30" className="stroke-primary/50" strokeWidth="1.5" />
+              <rect x="130" y="5" width="100" height="28" rx="6" className="fill-muted stroke-border" strokeWidth="1" />
+              <text x="180" y="23" textAnchor="middle" className="fill-muted-foreground text-[9px]">On-Prem / VPN</text>
+            </svg>
+          );
+        };
+
         return (
           <div className="space-y-6">
             <div className={fieldClass}>
@@ -555,11 +621,11 @@ const WizardPage = () => {
                         <Info className="h-4 w-4 text-muted-foreground shrink-0" />
                       </div>
                     </HoverCardTrigger>
-                    <HoverCardContent side="right" align="start" className="w-96 p-4">
-                      <p className="text-sm font-semibold text-foreground mb-2">{opt.label}</p>
-                      <p className="text-xs text-muted-foreground mb-3">{opt.description}</p>
-                      <div className="bg-muted rounded-md p-3 font-mono text-xs text-foreground leading-relaxed whitespace-pre">
-                        {opt.architecture.join("\n")}
+                    <HoverCardContent side="right" align="start" className="w-[420px] p-5">
+                      <p className="text-sm font-semibold text-foreground mb-1">{opt.label}</p>
+                      <p className="text-xs text-muted-foreground mb-4">{opt.description}</p>
+                      <div className="bg-muted/50 rounded-lg p-3 border border-border/50">
+                        <NetworkDiagram type={opt.value} />
                       </div>
                     </HoverCardContent>
                   </HoverCard>
