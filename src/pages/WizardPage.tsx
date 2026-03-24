@@ -903,7 +903,7 @@ const WizardPage = () => {
             <div className={fieldClass}><Label>Contact Person *</Label><Input value={data.contactPerson} onChange={e => update("contactPerson", e.target.value)} /></div>
             <div className={fieldClass}><Label>Email *</Label><Input type="email" value={data.email} onChange={e => update("email", e.target.value)} /></div>
             <div className={fieldClass}><Label>Phone</Label><Input type="tel" value={data.phone} onChange={e => update("phone", e.target.value)} /></div>
-            <div className={fieldClass}><Label>Country</Label><Input value={data.country} onChange={e => update("country", e.target.value)} /></div>
+            <div className={fieldClass}><Label>Country</Label><CountrySelector value={data.country} onChange={(v) => update("country", v)} /></div>
             <div className={fieldClass}><Label>Expected Go-Live Date</Label><Input type="date" value={data.goLiveDate} onChange={e => update("goLiveDate", e.target.value)} /></div>
           </div>
         </div>
