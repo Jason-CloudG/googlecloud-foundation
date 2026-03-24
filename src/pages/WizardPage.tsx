@@ -9,7 +9,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card } from "@/components/ui/card";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
-import { ArrowLeft, ArrowRight, Check, Cloud, AlertTriangle, ExternalLink, Info, Search, X } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { ArrowLeft, ArrowRight, Check, Cloud, AlertTriangle, ExternalLink, Info, Search, X, Shield, ShieldCheck, Lock, Key, Monitor, Eye, Globe, UserX, Database } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Link, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
@@ -105,11 +106,11 @@ const STORAGE_KEY = "lz-wizard-data";
 
 interface WizardData {
   // Step 0: Identity Gate
-  workspaceExists: string; // "yes" | "no" | ""
+  workspaceExists: string;
   identityOrgId: string;
   identityDomain: string;
   superAdminConfirmed: boolean;
-  superAdminSelection: string; // "yes" | "no" | ""
+  superAdminSelection: string;
   // Step 1: Org & Governance
   orgId: string;
   domain: string;
@@ -133,8 +134,17 @@ interface WizardData {
   identityProvider: string;
   // Step 7: Security
   cisLevel: string;
+  compliancePresets: string[];
   vpcServiceControls: boolean;
   cmek: boolean;
+  osLogin: boolean;
+  shieldedVm: boolean;
+  secCentralLogging: boolean;
+  auditLogs: boolean;
+  securityCommandCenter: boolean;
+  restrictPublicIp: boolean;
+  disableSaKeyCreation: boolean;
+  uniformBucketAccess: boolean;
   complianceNotes: string;
   // Step 8: Logging
   centralLogging: boolean;
@@ -163,7 +173,10 @@ const defaultData: WizardData = {
   folderPreference: "", folderNotes: "",
   networkModel: "", regions: "", hybridConnectivity: "",
   iamModel: "", identityProvider: "",
-  cisLevel: "", vpcServiceControls: false, cmek: false, complianceNotes: "",
+  cisLevel: "", compliancePresets: [], vpcServiceControls: false, cmek: false, osLogin: false, shieldedVm: true,
+  secCentralLogging: true, auditLogs: true, securityCommandCenter: true,
+  restrictPublicIp: true, disableSaKeyCreation: true, uniformBucketAccess: true,
+  complianceNotes: "",
   centralLogging: true, logRetention: "30", siemIntegration: "",
   supportPlan: "",
   cicdTool: "", terraformStateLocation: "", timeline: "",
@@ -845,29 +858,208 @@ const WizardPage = () => {
           </div>
         </div>
       );
-      case 7: return (
-        <div className="space-y-6">
-          <div className={fieldClass}><Label>CIS Benchmark Level</Label>
-            <Select value={data.cisLevel} onValueChange={v => update("cisLevel", v)}>
-              <SelectTrigger><SelectValue placeholder="Select level" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="level1">Level 1 (Standard)</SelectItem>
-                <SelectItem value="level2">Level 2 (Strict)</SelectItem>
-                <SelectItem value="custom">Custom Policy Set</SelectItem>
-              </SelectContent>
-            </Select>
+      case 7: {
+        const toggleCompliancePreset = (preset: string) => {
+          setData(prev => ({
+            ...prev,
+            compliancePresets: prev.compliancePresets.includes(preset)
+              ? prev.compliancePresets.filter(p => p !== preset)
+              : [...prev.compliancePresets, preset],
+          }));
+        };
+
+        const SecurityToggle = ({ label, description, icon: Icon, checked, onChange }: {
+          label: string; description: string; icon: any; checked: boolean; onChange: (v: boolean) => void;
+        }) => (
+          <div className="flex items-start justify-between gap-4 p-4 rounded-lg border border-border bg-card">
+            <div className="flex items-start gap-3">
+              <div className="mt-0.5 h-8 w-8 rounded-md bg-primary/10 flex items-center justify-center shrink-0">
+                <Icon className="h-4 w-4 text-primary" />
+              </div>
+              <div>
+                <p className="text-sm font-medium text-foreground">{label}</p>
+                <p className="text-xs text-muted-foreground mt-0.5">{description}</p>
+              </div>
+            </div>
+            <Switch checked={checked} onCheckedChange={onChange} className="shrink-0 mt-1" />
           </div>
-          <div className="flex items-center space-x-2 p-3 rounded-lg border bg-card">
-            <Checkbox checked={data.vpcServiceControls} onCheckedChange={v => update("vpcServiceControls", !!v)} />
-            <Label>Enable VPC Service Controls</Label>
+        );
+
+        return (
+          <div className="space-y-8">
+            {/* 1. CIS Benchmark Selection */}
+            <div className="space-y-3">
+              <Label className="text-base font-semibold">CIS Benchmark Level</Label>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div
+                  onClick={() => update("cisLevel", "level1")}
+                  className={`relative p-5 rounded-lg border-2 cursor-pointer transition-all ${
+                    data.cisLevel === "level1"
+                      ? "border-primary bg-primary/5 ring-1 ring-primary/20"
+                      : "border-border bg-card hover:border-primary/40"
+                  }`}
+                >
+                  <div className="flex items-center gap-2 mb-2">
+                    <Shield className="h-5 w-5 text-primary" />
+                    <span className="text-sm font-semibold text-foreground">Level 1 (Standard)</span>
+                  </div>
+                  <p className="text-xs text-muted-foreground">Baseline security aligned with Google best practices</p>
+                  <p className="text-xs text-muted-foreground mt-1.5 italic">Most organizations and production workloads</p>
+                  {data.cisLevel === "level1" && (
+                    <div className="absolute top-3 right-3 h-5 w-5 rounded-full bg-primary flex items-center justify-center">
+                      <Check className="h-3 w-3 text-primary-foreground" />
+                    </div>
+                  )}
+                </div>
+                <div
+                  onClick={() => update("cisLevel", "level2")}
+                  className={`relative p-5 rounded-lg border-2 cursor-pointer transition-all ${
+                    data.cisLevel === "level2"
+                      ? "border-primary bg-primary/5 ring-1 ring-primary/20"
+                      : "border-border bg-card hover:border-primary/40"
+                  }`}
+                >
+                  <div className="flex items-center gap-2 mb-2">
+                    <ShieldCheck className="h-5 w-5 text-primary" />
+                    <span className="text-sm font-semibold text-foreground">Level 2 (Strict)</span>
+                  </div>
+                  <p className="text-xs text-muted-foreground">Enhanced security for regulated environments</p>
+                  <p className="text-xs text-muted-foreground mt-1.5 italic">Healthcare, finance, enterprise</p>
+                  {data.cisLevel === "level2" && (
+                    <div className="absolute top-3 right-3 h-5 w-5 rounded-full bg-primary flex items-center justify-center">
+                      <Check className="h-3 w-3 text-primary-foreground" />
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* 2. Compliance Presets */}
+            <div className="space-y-3">
+              <Label className="text-base font-semibold">Compliance Presets <span className="text-xs font-normal text-muted-foreground">(Optional)</span></Label>
+              <div className="flex flex-wrap gap-2">
+                {["SOC 2", "HIPAA", "ISO 27001"].map(preset => (
+                  <button
+                    key={preset}
+                    type="button"
+                    onClick={() => toggleCompliancePreset(preset)}
+                    className={`px-4 py-2 rounded-lg border text-sm font-medium transition-all ${
+                      data.compliancePresets.includes(preset)
+                        ? "border-primary bg-primary/10 text-primary"
+                        : "border-border bg-card text-foreground hover:border-primary/40"
+                    }`}
+                  >
+                    {data.compliancePresets.includes(preset) && <Check className="h-3.5 w-3.5 inline mr-1.5 -mt-0.5" />}
+                    {preset}
+                  </button>
+                ))}
+              </div>
+              <p className="text-xs text-muted-foreground">Recommended controls will be applied based on selected compliance standard</p>
+            </div>
+
+            {/* 3. Core Security Controls */}
+            <div className="space-y-3">
+              <Label className="text-base font-semibold">Core Security Controls</Label>
+              <div className="space-y-2">
+                <SecurityToggle
+                  icon={Lock}
+                  label="VPC Service Controls"
+                  description="Restrict data exfiltration across Google services"
+                  checked={data.vpcServiceControls}
+                  onChange={v => update("vpcServiceControls", v)}
+                />
+                <SecurityToggle
+                  icon={Key}
+                  label="Customer-Managed Encryption Keys (CMEK)"
+                  description="Use Cloud KMS for full control over encryption keys"
+                  checked={data.cmek}
+                  onChange={v => update("cmek", v)}
+                />
+                <SecurityToggle
+                  icon={UserX}
+                  label="OS Login Enforcement"
+                  description="Enforce IAM-based SSH access instead of SSH keys"
+                  checked={data.osLogin}
+                  onChange={v => update("osLogin", v)}
+                />
+                <SecurityToggle
+                  icon={ShieldCheck}
+                  label="Shielded VM"
+                  description="Protect workloads from rootkit and boot-level attacks"
+                  checked={data.shieldedVm}
+                  onChange={v => update("shieldedVm", v)}
+                />
+              </div>
+            </div>
+
+            {/* 4. Logging & Monitoring */}
+            <div className="space-y-3">
+              <Label className="text-base font-semibold">Logging & Monitoring</Label>
+              <div className="space-y-2">
+                <SecurityToggle
+                  icon={Database}
+                  label="Centralized Logging Project"
+                  description="Aggregate logs across all projects"
+                  checked={data.secCentralLogging}
+                  onChange={v => update("secCentralLogging", v)}
+                />
+                <SecurityToggle
+                  icon={Eye}
+                  label="Audit Logs (Admin + Data Access)"
+                  description="Enable audit logging for critical services"
+                  checked={data.auditLogs}
+                  onChange={v => update("auditLogs", v)}
+                />
+                <SecurityToggle
+                  icon={Monitor}
+                  label="Security Command Center (Basic)"
+                  description="Enable Google-native security posture monitoring"
+                  checked={data.securityCommandCenter}
+                  onChange={v => update("securityCommandCenter", v)}
+                />
+              </div>
+            </div>
+
+            {/* 5. Organization Policy Enforcement */}
+            <div className="space-y-3">
+              <Label className="text-base font-semibold">Organization Policy Enforcement</Label>
+              <div className="space-y-2">
+                <SecurityToggle
+                  icon={Globe}
+                  label="Restrict Public IP Usage"
+                  description="Prevent external exposure of resources"
+                  checked={data.restrictPublicIp}
+                  onChange={v => update("restrictPublicIp", v)}
+                />
+                <SecurityToggle
+                  icon={UserX}
+                  label="Disable Service Account Key Creation"
+                  description="Enforce secure identity practices"
+                  checked={data.disableSaKeyCreation}
+                  onChange={v => update("disableSaKeyCreation", v)}
+                />
+                <SecurityToggle
+                  icon={Database}
+                  label="Enforce Uniform Bucket-Level Access"
+                  description="Standardize Cloud Storage access control"
+                  checked={data.uniformBucketAccess}
+                  onChange={v => update("uniformBucketAccess", v)}
+                />
+              </div>
+            </div>
+
+            {/* 6. Additional Requirements */}
+            <div className={fieldClass}>
+              <Label>Additional Requirements / Compliance Notes</Label>
+              <Textarea
+                placeholder="Example: Data residency (EU only), internal audit policies, regulatory constraints"
+                value={data.complianceNotes}
+                onChange={e => update("complianceNotes", e.target.value)}
+              />
+            </div>
           </div>
-          <div className="flex items-center space-x-2 p-3 rounded-lg border bg-card">
-            <Checkbox checked={data.cmek} onCheckedChange={v => update("cmek", !!v)} />
-            <Label>Enable Customer-Managed Encryption Keys (CMEK)</Label>
-          </div>
-          <div className={fieldClass}><Label>Additional Compliance Notes</Label><Textarea placeholder="SOC 2, HIPAA, ISO 27001, etc." value={data.complianceNotes} onChange={e => update("complianceNotes", e.target.value)} /></div>
-        </div>
-      );
+        );
+      }
       case 8: return (
         <div className="space-y-6">
           <div className="flex items-center space-x-2 p-3 rounded-lg border bg-card">
