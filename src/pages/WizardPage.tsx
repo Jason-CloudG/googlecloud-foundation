@@ -61,38 +61,42 @@ const CountrySelector = ({ value, onChange }: { value: string; onChange: (v: str
   const filtered = COUNTRIES.filter(c => c.toLowerCase().includes(search.toLowerCase()));
   return (
     <div className="relative">
-      {value && (
-        <Badge variant="secondary" className="text-xs gap-1 pr-1 mb-2">
-          {value}
-          <button type="button" onClick={() => onChange("")} className="ml-0.5 hover:text-destructive"><X className="h-3 w-3" /></button>
-        </Badge>
-      )}
-      <div className="relative">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-        <Input
-          placeholder="Search countries..."
-          value={search}
-          onChange={e => { setSearch(e.target.value); setOpen(true); }}
-          onFocus={() => setOpen(true)}
-          className="pl-9"
-        />
-      </div>
-      {open && (
-        <div className="absolute z-50 mt-1 w-full max-h-48 overflow-y-auto rounded-md border bg-popover shadow-md">
-          {filtered.length === 0 && <p className="text-sm text-muted-foreground p-3">No countries found</p>}
-          {filtered.map(c => (
-            <div
-              key={c}
-              onClick={() => { onChange(c); setOpen(false); setSearch(""); }}
-              className={`flex items-center gap-2 px-3 py-2 text-sm cursor-pointer hover:bg-accent transition-colors ${value === c ? "bg-primary/10 text-primary font-medium" : "text-foreground"}`}
-            >
-              {value === c && <Check className="h-3 w-3" />}
-              {c}
-            </div>
-          ))}
+      {value ? (
+        <div className="flex items-center gap-2 rounded-md border border-input bg-background px-3 py-2">
+          <Badge variant="secondary" className="text-xs gap-1 pr-1">
+            {value}
+            <button type="button" onClick={() => onChange("")} className="ml-0.5 hover:text-destructive"><X className="h-3 w-3" /></button>
+          </Badge>
         </div>
+      ) : (
+        <>
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search countries..."
+              value={search}
+              onChange={e => { setSearch(e.target.value); setOpen(true); }}
+              onFocus={() => setOpen(true)}
+              className="pl-9"
+            />
+          </div>
+          {open && (
+            <div className="absolute z-50 mt-1 w-full max-h-48 overflow-y-auto rounded-md border bg-popover shadow-md">
+              {filtered.length === 0 && <p className="text-sm text-muted-foreground p-3">No countries found</p>}
+              {filtered.map(c => (
+                <div
+                  key={c}
+                  onClick={() => { onChange(c); setOpen(false); setSearch(""); }}
+                  className="flex items-center gap-2 px-3 py-2 text-sm cursor-pointer hover:bg-accent transition-colors text-foreground"
+                >
+                  {c}
+                </div>
+              ))}
+            </div>
+          )}
+          {open && <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />}
+        </>
       )}
-      {open && <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />}
     </div>
   );
 };
