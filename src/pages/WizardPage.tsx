@@ -26,6 +26,7 @@ import stepSecurityImg from "@/assets/wizard/step-security.jpg";
 import stepLoggingImg from "@/assets/wizard/step-logging.jpg";
 import stepSupportImg from "@/assets/wizard/step-support.jpg";
 import stepAutomationImg from "@/assets/wizard/step-automation.jpg";
+import bgMain from "@/assets/wizard/bg-main.jpg";
 
 // Use step-org image for identity gate too
 const stepImages = [
