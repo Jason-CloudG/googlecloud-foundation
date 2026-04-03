@@ -26,6 +26,7 @@ import stepSecurityImg from "@/assets/wizard/step-security.jpg";
 import stepLoggingImg from "@/assets/wizard/step-logging.jpg";
 import stepSupportImg from "@/assets/wizard/step-support.jpg";
 import stepAutomationImg from "@/assets/wizard/step-automation.jpg";
+import bgMain from "@/assets/wizard/bg-main.jpg";
 
 // Use step-org image for identity gate too
 const stepImages = [
@@ -1198,41 +1199,52 @@ const WizardPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="bg-card border-b sticky top-0 z-40">
+    <div className="min-h-screen relative overflow-hidden">
+      {/* Full-page background image */}
+      <div className="fixed inset-0 z-0">
+        <img src={bgMain} alt="" className="w-full h-full object-cover" width={1920} height={1080} />
+        <div className="absolute inset-0 bg-gradient-to-br from-[hsl(217,33%,8%)]/90 via-[hsl(217,33%,12%)]/80 to-[hsl(217,33%,8%)]/95" />
+      </div>
+
+      {/* Floating glow effects */}
+      <div className="fixed top-1/4 left-1/4 w-96 h-96 rounded-full bg-primary/10 blur-[120px] pointer-events-none z-0" />
+      <div className="fixed bottom-1/4 right-1/4 w-80 h-80 rounded-full bg-accent/10 blur-[100px] pointer-events-none z-0" />
+
+      {/* Header */}
+      <div className="relative z-40 border-b border-[hsl(217,30%,18%)]/60 backdrop-blur-xl bg-[hsl(217,33%,8%)]/60 sticky top-0">
         <div className="container mx-auto px-4 py-3 flex items-center justify-between">
-          <Link to="/" className="flex items-center gap-2 font-bold text-foreground">
+          <Link to="/" className="flex items-center gap-2 font-bold text-[hsl(0,0%,100%)]">
             <Cloud className="h-5 w-5 text-primary" />
             CloudFoundry
           </Link>
-          <span className="text-sm text-muted-foreground">Step {step + 1} of {stepTitles.length}</span>
+          <span className="text-sm text-[hsl(215,20%,65%)]">Step {step + 1} of {stepTitles.length}</span>
         </div>
       </div>
 
-      <div className="container mx-auto max-w-3xl px-4 py-8">
+      <div className="relative z-10 container mx-auto max-w-3xl px-4 py-8">
         {/* Progress bar */}
         <div className="mb-8">
           <div className="flex gap-1">
             {stepTitles.map((_, i) => (
               <div
                 key={i}
-                className={`h-1.5 flex-1 rounded-full transition-colors ${i <= step ? "bg-primary" : "bg-border"}`}
+                className={`h-1.5 flex-1 rounded-full transition-colors ${i <= step ? "bg-primary shadow-[0_0_8px_hsl(217,91%,60%/0.5)]" : "bg-[hsl(217,30%,18%)]"}`}
               />
             ))}
           </div>
         </div>
 
-        <Card className="overflow-hidden">
+        <Card className="overflow-hidden border-[hsl(217,30%,18%)]/60 bg-[hsl(217,33%,12%)]/80 backdrop-blur-xl shadow-2xl shadow-primary/5">
           <div className="relative h-40 md:h-48 overflow-hidden">
             <img
               src={stepImages[step]}
               alt={stepTitles[step]}
               className="w-full h-full object-cover"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-card via-card/60 to-transparent" />
+            <div className="absolute inset-0 bg-gradient-to-t from-[hsl(217,33%,12%)] via-[hsl(217,33%,12%)]/60 to-transparent" />
             <div className="absolute bottom-4 left-6 right-6">
-              <h2 className="text-2xl font-black text-foreground">{stepTitles[step]}</h2>
-              <p className="text-muted-foreground text-sm">Step {step + 1} of {stepTitles.length}</p>
+              <h2 className="text-2xl font-black text-[hsl(0,0%,100%)]">{stepTitles[step]}</h2>
+              <p className="text-[hsl(215,20%,65%)] text-sm">Step {step + 1} of {stepTitles.length}</p>
             </div>
           </div>
           <div className="p-6 md:p-8">
@@ -1248,7 +1260,7 @@ const WizardPage = () => {
             </motion.div>
           </AnimatePresence>
 
-          <div className="flex justify-between mt-8 pt-6 border-t">
+          <div className="flex justify-between mt-8 pt-6 border-t border-[hsl(217,30%,18%)]">
             <Button variant="outline" onClick={() => setStep(s => s - 1)} disabled={step === 0}>
               <ArrowLeft className="mr-2 h-4 w-4" /> Previous
             </Button>
