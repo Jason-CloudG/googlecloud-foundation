@@ -1211,6 +1211,9 @@ const WizardPage = () => {
       <div className="fixed top-1/4 left-1/4 w-96 h-96 rounded-full bg-primary/10 blur-[120px] pointer-events-none z-0" />
       <div className="fixed bottom-1/4 right-1/4 w-80 h-80 rounded-full bg-accent/10 blur-[100px] pointer-events-none z-0" />
 
+      {/* Animated particles */}
+      <ParticlesBackground />
+
       {/* Header */}
       <div className="relative z-40 border-b border-[hsl(217,30%,18%)]/60 backdrop-blur-xl bg-[hsl(217,33%,8%)]/60 sticky top-0">
         <div className="container mx-auto px-4 py-3 flex items-center justify-between">
