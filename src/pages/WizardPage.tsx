@@ -1238,7 +1238,7 @@ const WizardPage = () => {
           </div>
         </div>
 
-        <Card className="overflow-hidden border-[hsl(217,30%,18%)]/60 bg-[hsl(217,33%,12%)]/80 backdrop-blur-xl shadow-2xl shadow-primary/5">
+        <Card className="overflow-hidden border-[hsl(217,30%,18%)]/60 bg-[hsl(217,33%,12%)] backdrop-blur-xl shadow-2xl shadow-primary/5">
           <div className="relative h-40 md:h-48 overflow-hidden">
             <img
               src={stepImages[step]}
